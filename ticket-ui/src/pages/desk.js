@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useContext, useState } from 'react';
 import { Row, Col, Typography, Button, Divider } from 'antd';
 import { CloseCircleOutlined, RightOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
+import { SocketContext } from '../context/socket-context';
 import { useHideMenu } from '../hooks/use-hide-menu';
 import {
   getUserStorage,
@@ -12,11 +13,15 @@ const { Title, Text } = Typography;
 
 export const Desk = () => {
   useHideMenu(false);
+  const { socket } = useContext(SocketContext);
   const navigate = useNavigate();
+  const [ticket, setTicket] = useState();
   const { agent, desk } = getUserStorage();
 
   const nextTicket = () => {
-    console.log('new ticket')
+    socket.emit('next-ticket', { agent, desk }, (ticketAssigned) => {
+      setTicket(ticketAssigned);
+    });
   };
 
   const handleCloseSession = () => {
@@ -47,8 +52,18 @@ export const Desk = () => {
       <Divider />
       <Row>
         <Col>
-          <Text>Está atendiendo el ticket númer: </Text>
-          <Text style={{ fontSize: 30 }} type='danger'>55</Text>
+        {
+          ticket ? (
+            <>
+              <Text>Está atendiendo el ticket número: </Text>
+              <Text style={{ fontSize: 30 }} type='danger'>{ ticket.number }</Text>
+            </>
+          ) : (
+            <>
+              <Text>No tiene ticket asignado</Text>
+            </>
+          )
+        }
         </Col>
       </Row>
       <Row>
